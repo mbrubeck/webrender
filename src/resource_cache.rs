@@ -466,6 +466,7 @@ fn run_raster_jobs(thread_pool: &mut scoped_threadpool::Pool,
                     job.result = font_context.get_glyph(job.glyph_key.font_key,
                                                         job.glyph_key.size,
                                                         job.glyph_key.index,
+                                                        job.glyph_key.quarter_pixel_offset,
                                                         device_pixel_ratio,
                                                         enable_aa);
                 });

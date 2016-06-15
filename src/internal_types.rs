@@ -788,17 +788,40 @@ pub struct Glyph {
     pub size: Au,
     pub blur_radius: Au,
     pub index: u32,
+    pub quarter_pixel_offset: QuarterPixelOffset,
 }
 
 impl Glyph {
     #[inline]
-    pub fn new(size: Au, blur_radius: Au, index: u32) -> Glyph {
+    pub fn new(size: Au, blur_radius: Au, index: u32, origin: Point2D<f32>) -> Glyph {
         Glyph {
             size: size,
             blur_radius: blur_radius,
             index: index,
+            quarter_pixel_offset: QuarterPixelOffset::from_frac_pixels(origin),
         }
     }
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+pub struct QuarterPixelOffset(u8);
+
+impl QuarterPixelOffset {
+    pub fn from_frac_pixels(p: Point2D<f32>) -> Self {
+        let x = (p.x.fract() * 4.0) as u8;
+        let y = (p.y.fract() * 4.0) as u8;
+        QuarterPixelOffset(x | y << 2)
+    }
+
+    pub fn to_frac_pixels(self) -> Point2D<f32> {
+        let x = (self.0 & 0b11) as f32 / 4.0;
+        let y = (self.0 >> 2) as f32 / 4.0;
+        Point2D::new(x, y)
+    }
+}
+
+fn quarter_pixels(x: f32) -> u8 {
+    (x.fract() * 4.0 + 0.5) as u8
 }
 
 #[derive(Debug, Clone)]
@@ -1016,15 +1039,21 @@ pub struct GlyphKey {
     pub size: Au,
     pub blur_radius: Au,
     pub index: u32,
+    pub quarter_pixel_offset: QuarterPixelOffset,
 }
 
 impl GlyphKey {
-    pub fn new(font_key: FontKey, size: Au, blur_radius: Au, index: u32) -> GlyphKey {
+    pub fn new(font_key: FontKey,
+               size: Au,
+               blur_radius: Au,
+               index: u32,
+               origin: Point2D<f32>) -> GlyphKey {
         GlyphKey {
             font_key: font_key,
             size: size,
             blur_radius: blur_radius,
             index: index,
+            quarter_pixel_offset: QuarterPixelOffset::from_frac_pixels(origin),
         }
     }
 }

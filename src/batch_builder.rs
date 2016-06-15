@@ -9,8 +9,8 @@ use euclid::{Rect, Point2D, Size2D};
 use fnv::FnvHasher;
 use frame::FrameId;
 use internal_types::{AxisDirection, BasicRotationAngle, BorderRadiusRasterOp, BoxShadowRasterOp};
-use internal_types::{GlyphKey, PackedVertexColorMode, RasterItem, RectColors, RectPolygon};
-use internal_types::{RectSide, RectUv, DevicePixel};
+use internal_types::{GlyphKey, PackedVertexColorMode, QuarterPixelOffset, RasterItem, RectColors};
+use internal_types::{RectPolygon, RectSide, RectUv, DevicePixel};
 use num_traits::Zero;
 use renderer::BLUR_INFLATION_FACTOR;
 use resource_cache::ResourceCache;
@@ -424,7 +424,11 @@ impl<'a> BatchBuilder<'a> {
         // Logic below to pick the primary render item depends on len > 0!
         assert!(glyphs.len() > 0);
 
-        let mut glyph_key = GlyphKey::new(font_key, size, blur_radius, glyphs[0].index);
+        let mut glyph_key = GlyphKey::new(font_key,
+                                          size,
+                                          blur_radius,
+                                          glyphs[0].index,
+                                          Point2D::new(glyphs[0].x, glyphs[0].y));
         let blur_offset = blur_radius.to_f32_px() * (BLUR_INFLATION_FACTOR as f32) / 2.0;
 
         let mut text_batches: HashMap<TextureId,
@@ -434,6 +438,7 @@ impl<'a> BatchBuilder<'a> {
 
         for glyph in glyphs {
             glyph_key.index = glyph.index;
+            glyph_key.quarter_pixel_offset = QuarterPixelOffset::from_frac_pixels(Point2D::new(glyph.x, glyph.y));
             let image_info = resource_cache.get_glyph(&glyph_key, frame_id);
             if let Some(image_info) = image_info {
                 let x = glyph.x + image_info.user_data.x0 as f32 / device_pixel_ratio - blur_offset;

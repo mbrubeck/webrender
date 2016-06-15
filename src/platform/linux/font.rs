@@ -12,6 +12,8 @@ use freetype::freetype::{FT_Face, FT_Long, FT_UInt, FT_F26Dot6};
 use freetype::freetype::{FT_Init_FreeType, FT_Load_Glyph};
 use freetype::freetype::{FT_New_Memory_Face, FT_GlyphSlot};
 
+use internal_types::QuarterPixelOffset;
+
 use std::{mem, ptr, slice};
 use std::collections::HashMap;
 //use util;
@@ -86,6 +88,7 @@ impl FontContext {
                      font_key: FontKey,
                      size: Au,
                      character: u32,
+                     quarter_pixel_offset: QuarterPixelOffset,
                      device_pixel_ratio: f32,
                      enable_aa: bool) -> Option<RasterizedGlyph> {
         debug_assert!(self.faces.contains_key(&font_key));

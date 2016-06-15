@@ -5,7 +5,7 @@
 use aabbtree::AABBTreeNode;
 use app_units::Au;
 use batch_builder;
-use euclid::{Rect, Size2D};
+use euclid::{Point2D, Rect, Size2D};
 use fnv::FnvHasher;
 use internal_types::{BorderRadiusRasterOp, BoxShadowRasterOp, DrawListItemIndex};
 use internal_types::{Glyph, GlyphKey, RasterItem, DevicePixel};
@@ -130,12 +130,13 @@ impl ResourceList {
 
     pub fn for_each_glyph<F>(&self, mut f: F) where F: FnMut(&GlyphKey) {
         for (font_id, glyphs) in &self.required_glyphs {
-            let mut glyph_key = GlyphKey::new(font_id.clone(), Au(0), Au(0), 0);
+            let mut glyph_key = GlyphKey::new(font_id.clone(), Au(0), Au(0), 0, Point2D::zero());
 
             for glyph in glyphs {
                 glyph_key.size = glyph.size;
                 glyph_key.index = glyph.index;
                 glyph_key.blur_radius = glyph.blur_radius;
+                glyph_key.quarter_pixel_offset = glyph.quarter_pixel_offset;
 
                 f(&glyph_key);
             }
@@ -185,7 +186,10 @@ impl BuildRequiredResources for AABBTreeNode {
                         SpecificDisplayItem::Text(ref info) => {
                             let glyphs = auxiliary_lists.glyph_instances(&info.glyphs);
                             for glyph in glyphs {
-                                let glyph = Glyph::new(info.size, info.blur_radius, glyph.index);
+                                let glyph = Glyph::new(info.size,
+                                                       info.blur_radius,
+                                                       glyph.index,
+                                                       Point2D::new(glyph.x, glyph.y));
                                 resource_list.add_glyph(info.font_key, glyph);
                             }
                         }
